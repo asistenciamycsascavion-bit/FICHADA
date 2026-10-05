@@ -1,6 +1,6 @@
 // Service worker: guarda la app en el teléfono para que abra sin señal.
 // Al publicar una versión nueva, cambiá el número de VERSION.
-const VERSION = 'fichada-v10';
+const VERSION = 'fichada-v10-1';
 const APP = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

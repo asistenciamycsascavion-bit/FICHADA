@@ -457,7 +457,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 // ══════════════════════════════════════════
 // FICHADA v10 — sin obras: fichada por persona y por día
 // ══════════════════════════════════════════
-const APP_VERSION = 10;
+const APP_VERSION = 10;   // app 10.1: cada usuario ve solo los empleados de su unidad
 
 // Datos de ejemplo (se reemplazan con la planilla al conectarla)
 const DEMO_DB = {
@@ -548,8 +548,22 @@ function newRec() { return { estado:'presente', entrada:'', salida:'', entrada2:
 function ensureRec(eid) { if(!dayData[eid]) dayData[eid]=newRec(); return dayData[eid]; }
 function hasData(r) { return !!r && (r.estado==='ausente' || r.estado==='otro' || !!(r.entrada||r.salida||r.entrada2||r.salida2||r.obs||r.altura||r.viaje)); }
 function isClosed(eid) { return !!(dayData[eid] && dayData[eid].cerr); }
-function porEnviar() { return DB.empleados.filter(e=>{ const r=dayData[e.id]; return hasData(r) && !r.cerr && r.mod; }); }
-function porCerrar() { return DB.empleados.filter(e=>{ const r=dayData[e.id]; return hasData(r) && !r.cerr; }); }
+// ─── Empleados que ve el usuario según su unidad ───
+// Capataz/responsable de MYC → empleados de MYC; de CAVION → de CAVION; sin unidad → los dos.
+// El responsable que reemplaza a un capataz de la otra unidad ve también los de esa unidad.
+// Los empleados sin unidad cargada se ven igual (para que no se pierdan) hasta que se complete la planilla.
+function unidadesDe(u) {
+  if(!u) return null;
+  const set = new Set([u.unidad||'']);
+  if(u.rol==='responsable') capatacesCubiertos(u.id).forEach(c=>set.add(c.unidad||''));
+  return set.has('') ? null : [...set];           // null = las dos unidades
+}
+function misEmpleados() {
+  const us = unidadesDe(currentUser);
+  return us ? DB.empleados.filter(e=>!e.unidad || us.includes(e.unidad)) : DB.empleados;
+}
+function porEnviar() { return misEmpleados().filter(e=>{ const r=dayData[e.id]; return hasData(r) && !r.cerr && r.mod; }); }
+function porCerrar() { return misEmpleados().filter(e=>{ const r=dayData[e.id]; return hasData(r) && !r.cerr; }); }
 // borra los datos guardados de días viejos (más de 10 días)
 function limpiarDiasViejos() {
   try {
@@ -642,8 +656,9 @@ function checkPin() {
         pinBuf=''; updateDots(); return;
       }
     }
-    if(!DB.empleados.length) {
-      document.getElementById('pin-error').textContent = 'No hay empleados cargados en la planilla';
+    if(!misEmpleados().length) {
+      const us = unidadesDe(currentUser);
+      document.getElementById('pin-error').textContent = us ? `No hay empleados de ${us.map(unidadLabel).join(' / ')} en la planilla` : 'No hay empleados cargados en la planilla';
       pinBuf=''; updateDots(); return;
     }
     openCards={}; selected=new Set(); filtro={ q:'', unidad:'' };
@@ -661,7 +676,8 @@ function checkPin() {
 function renderMain() {
   if(dia !== todayISO()) { loadDay(); selected=new Set(); openCards={}; }   // cambió el día con la app abierta
   document.getElementById('top-name').textContent = currentUser.nombre;
-  document.getElementById('top-sub').textContent = `${plural(DB.empleados.length,'empleado')} · fichada por persona`;
+  const us = unidadesDe(currentUser);
+  document.getElementById('top-sub').textContent = `${plural(misEmpleados().length,'empleado')} · ${us ? us.map(unidadLabel).join(' + ') : 'las dos unidades'}`;
   document.getElementById('top-date').textContent = todayDisplay();
   document.getElementById('quin-label').textContent = quinOf(new Date());
   const cub = currentUser.rol==='responsable' ? capatacesCubiertos(currentUser.id) : [];
@@ -678,7 +694,7 @@ function renderMain() {
 
 // Filtro por unidad: solo si hay empleados de las dos
 function renderChips() {
-  const us = [...new Set(DB.empleados.map(e=>e.unidad).filter(Boolean))];
+  const us = [...new Set(misEmpleados().map(e=>e.unidad).filter(Boolean))];
   const box = document.getElementById('unit-chips');
   if(us.length < 2) { box.style.display='none'; filtro.unidad=''; return; }
   box.style.display='flex';
@@ -690,13 +706,14 @@ function setBusqueda(q) { filtro.q=q; renderList(); }
 
 function visibles() {
   const q = norm(filtro.q).trim();
-  return DB.empleados.filter(e => (!filtro.unidad || e.unidad===filtro.unidad) && (!q || norm(e.nombre).includes(q) || norm(e.id)===q));
+  return misEmpleados().filter(e => (!filtro.unidad || e.unidad===filtro.unidad) && (!q || norm(e.nombre).includes(q) || norm(e.id)===q));
 }
 
 // Lista + barra de selección + acciones + botones (sin tocar el buscador, para no perder el foco)
 function renderList() {
   // la selección solo guarda personas que existen y no tienen la jornada cerrada
-  selected = new Set([...selected].filter(id=>empById(id) && !isClosed(id)));
+  const ids = new Set(misEmpleados().map(e=>e.id));
+  selected = new Set([...selected].filter(id=>ids.has(id) && !isClosed(id)));
   const vis = visibles();
   const selVis = vis.filter(e=>!isClosed(e.id));
   const nSelVis = selVis.filter(e=>selected.has(e.id)).length;
@@ -724,10 +741,11 @@ function renderList() {
     <button class="quick-btn qb-viaje" onclick="openApply('viaje')"><i class="ti ti-truck"></i> Hs. viaje</button>
     <button class="quick-btn qb-altura" onclick="openApply('altura')"><i class="ti ti-ladder"></i> Hs. altura</button>`;
 
-  const conDatos = DB.empleados.filter(e=>hasData(dayData[e.id])).length;
-  const cerradas = DB.empleados.filter(e=>isClosed(e.id)).length;
+  const mios = misEmpleados();
+  const conDatos = mios.filter(e=>hasData(dayData[e.id])).length;
+  const cerradas = mios.filter(e=>isClosed(e.id)).length;
   document.getElementById('workers-label').textContent =
-    `Personal — ${vis.length}${vis.length!==DB.empleados.length?` de ${DB.empleados.length}`:''} · hoy: ${conDatos} con datos${cerradas?` · ${cerradas} cerradas`:''}`;
+    `Personal — ${vis.length}${vis.length!==mios.length?` de ${mios.length}`:''} · hoy: ${conDatos} con datos${cerradas?` · ${cerradas} cerradas`:''}`;
   document.getElementById('worker-list').innerHTML = vis.length ? vis.map(buildCard).join('')
     : `<div class="empty-list">No hay empleados que coincidan con la búsqueda.</div>`;
   renderBotones();
