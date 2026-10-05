@@ -1,6 +1,6 @@
 // Service worker: guarda la app en el teléfono para que abra sin señal.
 // Al publicar una versión nueva, cambiá el número de VERSION.
-const VERSION = 'fichada-v10-1';
+const VERSION = 'fichada-v10-2';
 const APP = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -14,9 +14,10 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET') return;
   if (url.hostname.endsWith('google.com') || url.hostname.endsWith('googleusercontent.com')) return; // planilla: siempre por red
-  // App: primero la red (para tomar actualizaciones), si no hay señal, la copia guardada
+  if (url.pathname.endsWith('version.json')) return;                 // siempre por red, nunca guardado
+  // App: primero la red SIN caché del navegador (para tomar actualizaciones), si no hay señal, la copia guardada
   if (url.origin === location.origin) {
-    e.respondWith(fetch(e.request).then(r => { const c = r.clone(); caches.open(VERSION).then(ca => ca.put(e.request, c)); return r; })
+    e.respondWith(fetch(e.request.url, { cache: 'no-store' }).then(r => { const c = r.clone(); caches.open(VERSION).then(ca => ca.put(e.request, c)); return r; })
       .catch(() => caches.match(e.request, { ignoreSearch: true }).then(r => r || caches.match('./index.html'))));
     return;
   }

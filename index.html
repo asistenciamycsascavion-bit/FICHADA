@@ -264,6 +264,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 .empty-list{text-align:center;color:var(--muted);font-size:13px;padding:1.5rem .5rem}
 .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#1f2937;color:#fff;padding:10px 16px;border-radius:22px;font-size:13px;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:90vw;text-align:center}
 @media (min-width:760px){ .main-scroll{max-width:760px;margin:0 auto;width:100%} .confirm-btns{max-width:760px;margin:0 auto} }
+.upd-banner{position:fixed;top:0;left:0;right:0;z-index:300;display:flex;align-items:center;gap:10px;background:#1f2937;color:#fff;font-size:13px;padding:10px 14px;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.upd-banner button{background:#fff;color:#1f2937;border:none;border-radius:8px;padding:7px 12px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit}
 </style>
 </head>
 <body>
@@ -281,6 +283,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
     <div id="capataz-list"></div>
     <div id="demo-note" style="display:none;font-size:11px;color:var(--muted);text-align:center;margin-top:6px">Datos de ejemplo — conectá la planilla desde Administración</div>
   </div>
+  <div class="app-build" style="color:rgba(255,255,255,.7);font-size:11px;margin-top:12px;text-align:center"></div>
 </div>
 
 <!-- ═══ PIN ═══ -->
@@ -396,6 +399,11 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
         <div class="cr-label">Link para los celulares<div class="cr-sub">Configura la conexión en otro equipo con un toque</div></div>
         <button class="cr-btn" onclick="openLinkModal()">Ver link</button>
       </div>
+      <div class="config-row">
+        <i class="ti ti-download"></i>
+        <div class="cr-label">Versión de la app<div class="cr-sub app-build"></div></div>
+        <button class="cr-btn" onclick="buscarActualizacion().then(()=>alert(nuevaVersion ? 'Hay una versión nueva: tocá Actualizar en el aviso de arriba.' : '✓ La app está actualizada.'))">Buscar</button>
+      </div>
     </div>
 
     <div class="section-label" style="margin-bottom:6px">REEMPLAZO DE CAPATACES</div>
@@ -452,12 +460,15 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 </div>
 
 <div id="toast" class="toast" style="display:none"></div>
+<div id="upd-banner" class="upd-banner" style="display:none"><i class="ti ti-refresh"></i><span id="upd-text" style="flex:1"></span><button onclick="actualizarApp()">Actualizar</button></div>
 
 <script>
 // ══════════════════════════════════════════
 // FICHADA v10 — sin obras: fichada por persona y por día
 // ══════════════════════════════════════════
-const APP_VERSION = 10;   // app 10.1: cada usuario ve solo los empleados de su unidad
+const APP_VERSION = 10;   // versión mínima del script (Codigo.gs) que necesita esta app
+// Versión de la app. Al publicar cambios: subir este número y el de version.json (los dos iguales).
+const APP_BUILD = '10.2';
 
 // Datos de ejemplo (se reemplazan con la planilla al conectarla)
 const DEMO_DB = {
@@ -1168,13 +1179,52 @@ function copyLink() {
   (navigator.clipboard ? navigator.clipboard.writeText(t.value) : Promise.reject()).then(()=>alert('✓ Link copiado'), ()=>{ document.execCommand('copy'); alert('✓ Link copiado'); });
 }
 
+// ─── ACTUALIZACIÓN AUTOMÁTICA ───
+// La app compara su número con version.json en GitHub (sin caché). Si hay uno nuevo:
+// en la pantalla de inicio se actualiza sola; si alguien está fichando, aparece un aviso para tocar.
+// Lo cargado no se pierde: todo queda guardado en el equipo antes de recargar.
+let nuevaVersion = '';
+async function buscarActualizacion() {
+  if(!location.protocol.startsWith('http') || !navigator.onLine) return;
+  try {
+    const r = await fetch(`version.json?t=${Date.now()}`, { cache:'no-store' });
+    if(!r.ok) return;
+    const v = String((await r.json()).version||'');
+    if(!v || v===APP_BUILD) { nuevaVersion=''; mostrarAviso(); return; }
+    nuevaVersion = v;
+    const enInicio = document.getElementById('screen-login').classList.contains('active');
+    if(enInicio && lsGet('mychada_upd_try','')!==v) { actualizarApp(); return; }   // una sola vez por versión (evita bucles)
+    mostrarAviso();
+  } catch(e) {}
+}
+function mostrarAviso() {
+  const b = document.getElementById('upd-banner'); if(!b) return;
+  b.style.display = nuevaVersion ? 'flex' : 'none';
+  if(nuevaVersion) document.getElementById('upd-text').textContent = `Hay una versión nueva de la app (${nuevaVersion})`;
+}
+async function actualizarApp() {
+  if(!nuevaVersion) return;
+  lsSet('mychada_upd_try', nuevaVersion);
+  try {
+    if('serviceWorker' in navigator) { const regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r=>r.update().catch(()=>{}))); }
+    if(window.caches) { const ks = await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k))); }
+  } catch(e) {}
+  location.replace(location.pathname + '?v=' + encodeURIComponent(nuevaVersion));
+}
+
 // ─── INIT ───
 try { ['mychada_gps','mychada_pending','mychada_sheetId'].forEach(k=>localStorage.removeItem(k)); } catch(e){}
 limpiarDiasViejos();
 readSetupLink();
 initLogin();
 backgroundSync();
-window.addEventListener('online', backgroundSync);
+buscarActualizacion();
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') buscarActualizacion(); });
+setInterval(buscarActualizacion, 30*60000);
+document.querySelectorAll('.app-build').forEach(el=>el.textContent = 'Versión ' + APP_BUILD);
+// quita el ?v= de la dirección después de actualizar
+if(/[?&]v=/.test(location.search)) history.replaceState(null,'',location.pathname+location.hash);
+window.addEventListener('online', ()=>{ backgroundSync(); buscarActualizacion(); });
 window.addEventListener('offline', ()=>updateSyncBar());
 setInterval(()=>{ if(getQueue().length) flushQueue(); }, 60000);
 if('serviceWorker' in navigator && location.protocol.startsWith('http')) {
