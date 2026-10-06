@@ -265,6 +265,41 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#1f2937;color:#fff;padding:10px 16px;border-radius:22px;font-size:13px;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:90vw;text-align:center}
 @media (min-width:760px){ .main-scroll{max-width:760px;margin:0 auto;width:100%} .confirm-btns{max-width:760px;margin:0 auto} }
 .upd-banner{position:fixed;top:0;left:0;right:0;z-index:300;display:flex;align-items:center;gap:10px;background:#1f2937;color:#fff;font-size:13px;padding:10px 14px;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.av-ind{background:#1a7a4a}
+.rp-ind{background:var(--green-soft);color:var(--green-text)}
+
+/* v11: USUARIO INDIVIDUAL */
+.ind-scroll{flex:1;overflow-y:auto;padding:.9rem .9rem 2rem}
+@media (min-width:760px){ .ind-scroll{max-width:520px;margin:0 auto;width:100%} }
+.ind-card{background:var(--card);border-radius:var(--r-lg);border:.5px solid var(--border);box-shadow:var(--shadow);padding:14px 16px;margin-bottom:.9rem}
+.ind-title{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.04em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.ind-marks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ind-mark{background:var(--bg);border-radius:var(--r-md);padding:9px 11px}
+.ind-mark label{display:block;font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.ind-mark b{display:block;font-size:22px;font-weight:700;margin-top:2px;color:var(--text)}
+.ind-mark.vacio b{color:#c3c8d2}
+.ind-total{font-size:13px;color:var(--muted);margin-top:10px}
+.ind-total b{color:var(--text)}
+.ind-actions{display:flex;flex-direction:column;gap:10px;margin-bottom:.9rem}
+.ind-btn{width:100%;border:none;border-radius:20px;padding:26px 12px;font-size:24px;font-weight:800;letter-spacing:.04em;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;font-family:inherit;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.ind-btn i{font-size:32px}
+.ind-btn small{display:block;font-size:12px;font-weight:500;letter-spacing:0;opacity:.9;margin-top:2px}
+.ind-btn:active{transform:scale(.98)}
+.ind-btn.in{background:var(--green)}
+.ind-btn.out{background:var(--blue)}
+.ind-btn.close{background:var(--brand)}
+.ind-btn2{width:100%;border:1px solid var(--border);background:var(--card);border-radius:var(--r-md);padding:14px 12px;font-size:15px;font-weight:600;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit}
+.ind-btn2 i{font-size:19px}
+.ind-done{text-align:center;padding:22px 12px}
+.ind-done i{font-size:44px;color:var(--blue)}
+.ind-done .t{font-size:17px;font-weight:700;margin-top:6px}
+.ind-done .s{font-size:13px;color:var(--muted);margin-top:4px}
+.ind-warn{display:flex;gap:10px;align-items:flex-start;background:var(--orange-soft);border:.5px solid #f5c070;color:var(--orange-text);border-radius:var(--r-md);padding:11px 13px;font-size:12px;line-height:1.5;margin-bottom:.9rem}
+.ind-warn i{font-size:18px;flex-shrink:0}
+.big-time{font-size:48px;font-weight:800;text-align:center;letter-spacing:1px;margin:.4rem 0 1.1rem;color:var(--text)}
+.modal-btns.col{grid-template-columns:1fr}
+.modal-btn.go-in{background:var(--green);color:#fff}
+.modal-btn.go-out{background:var(--blue);color:#fff}
 .upd-banner button{background:#fff;color:#1f2937;border:none;border-radius:8px;padding:7px 12px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit}
 </style>
 </head>
@@ -370,6 +405,73 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
   </div>
 </div>
 
+<!-- ═══ INDIVIDUAL (ficha para sí mismo) ═══ -->
+<div id="screen-ind" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goLogin()"><i class="ti ti-logout"></i></button>
+    <div style="flex:1">
+      <div class="topbar-name" id="ind-name"></div>
+      <div class="topbar-sub" id="ind-sub"></div>
+    </div>
+    <div class="topbar-right"><div class="date-pill" id="ind-date"></div></div>
+  </div>
+  <div class="ind-scroll">
+    <div class="quin-chip"><i class="ti ti-calendar-week"></i><span id="ind-quin"></span></div>
+    <div class="sync-bar">
+      <div class="sync-dot" id="sync-dot-ind"></div>
+      <span class="sync-text" id="sync-text-ind">En línea</span>
+    </div>
+    <div id="ind-avisos"></div>
+    <div id="ind-actions" class="ind-actions"></div>
+    <div class="ind-card">
+      <div class="ind-title"><i class="ti ti-clock"></i> HOY</div>
+      <div id="ind-marks"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL MARCA (individual) ═══ -->
+<div id="modal-marca" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeModal('modal-marca')">
+  <div class="modal-sheet">
+    <div class="modal-title" id="marca-title"></div>
+    <div class="big-time" id="marca-hora"></div>
+    <div class="modal-sub" id="marca-sub" style="text-align:center"></div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal('modal-marca')">Cancelar</button>
+      <button class="modal-btn save" id="marca-btn" onclick="confirmarMarca()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL DESPUÉS DE LA 1ª SALIDA ═══ -->
+<div id="modal-sigue" class="modal-backdrop" style="display:none">
+  <div class="modal-sheet">
+    <div class="modal-title" id="sigue-title">¿Terminaste el día?</div>
+    <div class="modal-sub">Si salís por un rato (médico, trámite) y después volvés, elegí <strong>Vuelvo más tarde</strong> y a la vuelta marcás la 2ª entrada.</div>
+    <div class="modal-btns col">
+      <button class="modal-btn go-out" onclick="closeModal('modal-sigue');abrirCierre()"><i class="ti ti-flag-check"></i> Terminé el día</button>
+      <button class="modal-btn cancel" onclick="closeModal('modal-sigue');vuelvoMasTarde()"><i class="ti ti-arrow-back-up"></i> Vuelvo más tarde</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL CIERRE (horas de viaje) ═══ -->
+<div id="modal-cierre" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeModal('modal-cierre')">
+  <div class="modal-sheet">
+    <div class="modal-title">Cerrar la jornada</div>
+    <div class="modal-sub" id="cierre-sub"></div>
+    <div class="modal-label">Horas de viaje de hoy</div>
+    <input class="modal-input" id="cierre-viaje" type="number" min="0" max="24" step="0.5" placeholder="0" style="font-size:22px;font-weight:600">
+    <div class="modal-label">Observación (opcional)</div>
+    <textarea class="modal-input" id="cierre-obs" rows="2" placeholder="Ej: salí al médico de 10 a 12" style="resize:vertical"></textarea>
+    <div class="modal-sub" style="margin:-4px 0 1rem;font-size:12px">Revisá que las horas de viaje estén bien: después de cerrar no se puede modificar.</div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeModal('modal-cierre')">Volver</button>
+      <button class="modal-btn save" onclick="cerrarIndividual()"><i class="ti ti-lock"></i> Confirmar y cerrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ ADMIN ═══ -->
 <div id="screen-admin" class="screen">
   <div class="topbar">
@@ -464,11 +566,12 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sy
 
 <script>
 // ══════════════════════════════════════════
-// FICHADA v10 — sin obras: fichada por persona y por día
+// FICHADA v11 — sin obras: fichada por persona y por día
+//   + usuario INDIVIDUAL (ej.: gruista): ficha solo para sí mismo con botones de Entrada / Salida
 // ══════════════════════════════════════════
-const APP_VERSION = 10;   // versión mínima del script (Codigo.gs) que necesita esta app
+const APP_VERSION = 11;   // versión mínima del script (Codigo.gs) que necesita esta app
 // Versión de la app. Al publicar cambios: subir este número y el de version.json (los dos iguales).
-const APP_BUILD = '10.2';
+const APP_BUILD = '11.0';
 
 // Datos de ejemplo (se reemplazan con la planilla al conectarla)
 const DEMO_DB = {
@@ -476,6 +579,7 @@ const DEMO_DB = {
     { id:'u1', unidad:'MYC',    nombre:'Roberto Sánchez', iniciales:'RS', pin:'1234', rol:'capataz',     responsableId:'u3' },
     { id:'u2', unidad:'CAVION', nombre:'Miguel Torres',   iniciales:'MT', pin:'5678', rol:'capataz',     responsableId:'u3' },
     { id:'u3', unidad:'',       nombre:'Fabián Ríos',     iniciales:'FR', pin:'4321', rol:'responsable' },
+    { id:'u4', unidad:'',       nombre:'Néstor Paz',      iniciales:'NP', pin:'2468', rol:'individual', empleadoId:'e10' },
     { id:'adm', unidad:'',      nombre:'Administración',  iniciales:'AD', pin:'0000', rol:'admin' }
   ],
   empleados: [
@@ -487,7 +591,8 @@ const DEMO_DB = {
     { id:'e6', unidad:'CAVION', nombre:'Ariel Giménez',  iniciales:'AG' },
     { id:'e7', unidad:'CAVION', nombre:'Lucas Pereyra',  iniciales:'LP' },
     { id:'e8', unidad:'MYC',    nombre:'Hugo Castro',    iniciales:'HC' },
-    { id:'e9', unidad:'CAVION', nombre:'Ramón Vera',     iniciales:'RV' }
+    { id:'e9', unidad:'CAVION', nombre:'Ramón Vera',     iniciales:'RV' },
+    { id:'e10', unidad:'MYC',   nombre:'Néstor Paz',     iniciales:'NP' }
   ]
 };
 // Si la app ya se conectó a la planilla, usa la última copia descargada (funciona sin señal)
@@ -569,9 +674,11 @@ function unidadesDe(u) {
   if(u.rol==='responsable') capatacesCubiertos(u.id).forEach(c=>set.add(c.unidad||''));
   return set.has('') ? null : [...set];           // null = las dos unidades
 }
+// Empleados que fichan solos (usuario individual): no aparecen en las listas de capataces
+function idsIndividuales() { return new Set(DB.usuarios.filter(u=>u.rol==='individual' && u.empleadoId).map(u=>u.empleadoId)); }
 function misEmpleados() {
-  const us = unidadesDe(currentUser);
-  return us ? DB.empleados.filter(e=>!e.unidad || us.includes(e.unidad)) : DB.empleados;
+  const us = unidadesDe(currentUser), ind = idsIndividuales();
+  return DB.empleados.filter(e=>!ind.has(e.id) && (!us || !e.unidad || us.includes(e.unidad)));
 }
 function porEnviar() { return misEmpleados().filter(e=>{ const r=dayData[e.id]; return hasData(r) && !r.cerr && r.mod; }); }
 function porCerrar() { return misEmpleados().filter(e=>{ const r=dayData[e.id]; return hasData(r) && !r.cerr; }); }
@@ -602,9 +709,9 @@ function initLogin() {
   document.getElementById('demo-note').style.display = lsGet('mychada_db',null) ? 'none' : 'block';
   const list = document.getElementById('capataz-list');
   const boton = u => {
-    const avClass = u.rol==='admin' ? 'av-admin' : u.rol==='responsable' ? 'av-resp' : 'av-cap';
-    const rpClass = u.rol==='admin' ? 'rp-admin' : u.rol==='responsable' ? 'rp-resp' : 'rp-cap';
-    const rpLabel = u.rol==='admin' ? 'Admin' : u.rol==='responsable' ? 'Responsable' : 'Capataz';
+    const avClass = u.rol==='admin' ? 'av-admin' : u.rol==='responsable' ? 'av-resp' : u.rol==='individual' ? 'av-ind' : 'av-cap';
+    const rpClass = u.rol==='admin' ? 'rp-admin' : u.rol==='responsable' ? 'rp-resp' : u.rol==='individual' ? 'rp-ind' : 'rp-cap';
+    const rpLabel = u.rol==='admin' ? 'Admin' : u.rol==='responsable' ? 'Responsable' : u.rol==='individual' ? 'Individual' : 'Capataz';
     let sub = '';
     if(u.rol==='capataz') { const rep = reemplazanteDe(u.id); if(rep) sub = `Reemplazado por ${rep.nombre}`; }
     else if(u.rol==='responsable') { const cub = capatacesCubiertos(u.id); if(cub.length) sub = `Reemplazando a ${cub.map(c=>c.nombre).join(', ')}`; }
@@ -618,13 +725,15 @@ function initLogin() {
     </button>`;
   };
   // Si los usuarios tienen unidad cargada, se agrupan: MYC · CAVION · las dos · administración
-  const orden = {capataz:0, responsable:1, admin:2};
+  const orden = {capataz:0, responsable:1, individual:2, admin:3};
   const ordenados = DB.usuarios.slice().sort((a,b)=>(orden[a.rol]??3)-(orden[b.rol]??3) || a.nombre.localeCompare(b.nombre));
   if(!DB.usuarios.some(u=>u.unidad)) { list.innerHTML = ordenados.map(boton).join(''); return; }
+  const equipo = u=>u.rol!=='admin' && u.rol!=='individual';
   const grupos = [
-    ['MYC S.A.S.', u=>u.rol!=='admin' && u.unidad==='MYC'],
-    ['CAVION Aberturas', u=>u.rol!=='admin' && u.unidad==='CAVION'],
-    ['Las dos unidades', u=>u.rol!=='admin' && u.unidad!=='MYC' && u.unidad!=='CAVION'],
+    ['MYC S.A.S.', u=>equipo(u) && u.unidad==='MYC'],
+    ['CAVION Aberturas', u=>equipo(u) && u.unidad==='CAVION'],
+    ['Las dos unidades', u=>equipo(u) && u.unidad!=='MYC' && u.unidad!=='CAVION'],
+    ['Fichada individual', u=>u.rol==='individual'],
     ['Administración', u=>u.rol==='admin']
   ];
   list.innerHTML = grupos.map(([titulo, f])=>{
@@ -660,6 +769,13 @@ document.addEventListener('keydown', e=>{
 function checkPin() {
   if(pinBuf===currentUser.pin) {
     if(currentUser.rol==='admin') { showScreen('admin'); loadAdminData(); return; }
+    if(currentUser.rol==='individual') {
+      if(!empById(currentUser.empleadoId)) {
+        document.getElementById('pin-error').textContent = 'Tu usuario no está vinculado a un empleado (falta "Empleado ID" en la planilla)';
+        pinBuf=''; updateDots(); return;
+      }
+      loadDay(); renderInd(); showScreen('ind'); return;
+    }
     if(currentUser.rol==='capataz') {
       const rep = reemplazanteDe(currentUser.id);
       if(rep) {
@@ -969,6 +1085,144 @@ function buildFila(emp, r) {
 }
 
 // ══════════════════════════════════════════
+// USUARIO INDIVIDUAL (ej.: gruista) — ficha solo para sí mismo
+// La hora la toma del celular al confirmar. Cada marca se envía sola.
+// Flujo: ENTRADA → SALIDA → ¿terminaste? → (Terminé) horas de viaje + cerrar
+//                                         → (Vuelvo más tarde) 2ª ENTRADA → 2ª SALIDA → viaje + cerrar
+// ══════════════════════════════════════════
+let marcaPend = null, relojMarca = null;
+function miEmp() { return currentUser && empById(currentUser.empleadoId); }
+function miRec() { return ensureRec(currentUser.empleadoId); }
+function minEntre(a, b) {
+  const m = s => { const x=/^(\d{1,2}):(\d{2})/.exec(s||''); return x ? (+x[1])*60+(+x[2]) : null; };
+  const i=m(a), f=m(b); if(i===null || f===null) return 0;
+  let d=f-i; if(d<0) d+=1440; return d;
+}
+function fmtMin(m) { const h=Math.floor(m/60), x=m%60; return `${h} h ${String(x).padStart(2,'0')} min`; }
+function minTrabajados(r) { return minEntre(r.entrada, r.salida) + minEntre(r.entrada2, r.salida2); }
+// Qué le toca hacer ahora
+function pasoInd(r) {
+  if(r.cerr) return 'cerrada';
+  if(!r.entrada) return 'entrada';
+  if(!r.salida) return 'salida';
+  if(r.estado!=='otro') return 'decidir';
+  if(!r.entrada2) return 'entrada2';
+  if(!r.salida2) return 'salida2';
+  return 'cerrar';
+}
+// Jornadas de días anteriores que quedaron abiertas en este equipo
+function diasAbiertos() {
+  const out=[], id=currentUser.empleadoId;
+  try {
+    Object.keys(localStorage).forEach(k=>{
+      const m=/^mychada_dia_(\d{4}-\d{2}-\d{2})$/.exec(k); if(!m || m[1]>=dia) return;
+      const r=((lsGet(k,{})||{}).d||{})[id];
+      if(r && r.entrada && !r.cerr) out.push(m[1]);
+    });
+  } catch(e){}
+  return out.sort();
+}
+function renderInd() {
+  if(dia !== todayISO()) loadDay();                       // cambió el día con la app abierta
+  const emp=miEmp(), r=dayData[emp.id]||newRec(), paso=pasoInd(r);
+  document.getElementById('ind-name').textContent = currentUser.nombre;
+  document.getElementById('ind-sub').textContent = emp.unidad ? `Fichada individual · ${unidadLabel(emp.unidad)}` : 'Fichada individual';
+  document.getElementById('ind-date').textContent = todayDisplay();
+  document.getElementById('ind-quin').textContent = quinOf(new Date());
+  updateSyncBar();
+
+  const ab = diasAbiertos();
+  document.getElementById('ind-avisos').innerHTML = ab.length ? `<div class="ind-warn"><i class="ti ti-alert-triangle"></i><div>
+    ${ab.length===1?'Quedó sin cerrar la jornada del':'Quedaron sin cerrar las jornadas del'} <strong>${ab.map(d=>d.slice(8,10)+'/'+d.slice(5,7)).join(', ')}</strong>
+    (falta la salida). Avisale a administración para que lo corrija en la planilla.</div></div>` : '';
+
+  const big = (cls, ico, txt, sub, fn) => `<button class="ind-btn ${cls}" onclick="${fn}"><i class="ti ${ico}"></i><span>${txt}${sub?`<small>${sub}</small>`:''}</span></button>`;
+  const chico = (ico, txt, fn) => `<button class="ind-btn2" onclick="${fn}"><i class="ti ${ico}"></i> ${txt}</button>`;
+  const acc = {
+    entrada:  () => big('in','ti-login','ENTRADA','Tocá al llegar',"marcar('entrada')"),
+    salida:   () => big('out','ti-logout','SALIDA',`Entraste a las ${r.entrada}`,"marcar('salida')"),
+    decidir:  () => big('close','ti-flag-check','TERMINÉ EL DÍA','Horas de viaje y cerrar jornada','abrirCierre()') + chico('ti-arrow-back-up','Vuelvo más tarde (2ª entrada)','vuelvoMasTarde()'),
+    entrada2: () => big('in','ti-login','2ª ENTRADA','Tocá al volver',"marcar('entrada2')") + chico('ti-flag-check','No vuelvo hoy: cerrar jornada','abrirCierre()'),
+    salida2:  () => big('out','ti-logout','2ª SALIDA',`Volviste a las ${r.entrada2}`,"marcar('salida2')"),
+    cerrar:   () => big('close','ti-flag-check','CERRAR JORNADA','Horas de viaje y cerrar','abrirCierre()'),
+    cerrada:  () => `<div class="ind-card ind-done"><i class="ti ti-circle-check"></i><div class="t">Jornada cerrada</div><div class="s">Cerrada el ${esc(r.cerr)}. ¡Hasta mañana!</div></div>`
+  };
+  document.getElementById('ind-actions').innerHTML = acc[paso]();
+
+  const box = (l, v) => `<div class="ind-mark${v?'':' vacio'}"><label>${l}</label><b>${v||'--:--'}</b></div>`;
+  const dos = r.estado==='otro' || r.entrada2 || r.salida2;
+  const tot = minTrabajados(r);
+  document.getElementById('ind-marks').innerHTML =
+    `<div class="ind-marks">${box(dos?'Entrada 1':'Entrada', r.entrada)}${box(dos?'Salida 1':'Salida', r.salida)}${dos?box('Entrada 2', r.entrada2)+box('Salida 2', r.salida2):''}</div>`
+    + (tot ? `<div class="ind-total">Trabajado: <b>${fmtMin(tot)}</b>${r.cerr?` · Viaje: <b>${r.viaje||0} h</b>`:''}</div>` : '')
+    + (r.obs ? `<div class="ind-total">Observación: ${esc(r.obs)}</div>` : '');
+}
+const MARCA_TXT = { entrada:'Entrada', salida:'Salida', entrada2:'2ª entrada', salida2:'2ª salida' };
+function marcar(campo) {
+  const r=miRec(); if(r.cerr || r[campo]) { renderInd(); return; }
+  marcaPend = campo;
+  const esIn = campo.startsWith('entrada');
+  document.getElementById('marca-title').textContent = `¿Confirmás tu ${MARCA_TXT[campo].toLowerCase()}?`;
+  document.getElementById('marca-sub').textContent = 'Se registra la hora del celular en el momento en que confirmás.';
+  const b=document.getElementById('marca-btn');
+  b.className = 'modal-btn ' + (esIn ? 'go-in' : 'go-out');
+  b.textContent = `Confirmar ${MARCA_TXT[campo].toLowerCase()}`;
+  const tick = () => document.getElementById('marca-hora').textContent = nowTime();
+  tick(); clearInterval(relojMarca); relojMarca = setInterval(tick, 1000);
+  document.getElementById('modal-marca').style.display='flex';
+}
+function confirmarMarca() {
+  clearInterval(relojMarca);
+  closeModal('modal-marca');
+  if(dia !== todayISO()) loadDay();
+  const campo=marcaPend, r=miRec(); marcaPend=null;
+  if(!campo || r.cerr || r[campo]) { renderInd(); return; }
+  r[campo] = nowTime(); r.mod = true;
+  enviarInd();
+  renderInd();
+  if(campo==='salida') {
+    document.getElementById('sigue-title').textContent = `Salida registrada a las ${r.salida}. ¿Terminaste el día?`;
+    setTimeout(()=>document.getElementById('modal-sigue').style.display='flex', 150);
+  } else if(campo==='salida2') setTimeout(abrirCierre, 150);
+  else toast(`✓ ${MARCA_TXT[campo]} registrada a las ${r[campo]}`);
+}
+function vuelvoMasTarde() {
+  const r=miRec(); if(r.cerr) return;
+  r.estado='otro'; r.mod=true;
+  enviarInd(); renderInd();
+  toast('Cuando vuelvas, tocá 2ª ENTRADA');
+}
+function abrirCierre() {
+  const r=miRec(); if(r.cerr) return;
+  const partes = [`Entrada ${r.entrada}`, `Salida ${r.salida}`];
+  if(r.entrada2) partes.push(`2ª entrada ${r.entrada2}`, `2ª salida ${r.salida2||'—'}`);
+  document.getElementById('cierre-sub').textContent = `${partes.join(' · ')} — Trabajado: ${fmtMin(minTrabajados(r))}`;
+  document.getElementById('cierre-viaje').value = r.viaje || '';
+  document.getElementById('cierre-obs').value = r.obs || '';
+  document.getElementById('modal-cierre').style.display='flex';
+}
+function cerrarIndividual() {
+  const r=miRec(); if(r.cerr) return;
+  const v = parseFloat(document.getElementById('cierre-viaje').value) || 0;
+  if(v<0 || v>24) { alert('Revisá las horas de viaje (entre 0 y 24).'); return; }
+  r.viaje = v;
+  r.obs = document.getElementById('cierre-obs').value.trim();
+  if(r.estado==='otro' && !r.entrada2) r.estado='presente';   // dijo que volvía pero no volvió
+  r.cerr = stamp(); r.mod = true;
+  closeModal('modal-cierre');
+  enviarInd(); renderInd();
+  toast('✓ Jornada cerrada');
+}
+// Manda su fila (siempre completa). Si había un envío anterior del mismo día sin mandar, lo reemplaza.
+function enviarInd() {
+  const emp=miEmp(), r=miRec();
+  if(!r.env) r.env = stamp();
+  r.mod = false; saveDay();
+  setQueue(getQueue().filter(x=>!(x.accion==='registros' && x.filas && x.filas.length===1 && x.filas[0].empleadoId===emp.id && x.filas[0].fecha===dia)));
+  enqueue({ accion:'registros', filas:[buildFila(emp, r)] });
+}
+
+// ══════════════════════════════════════════
 // CONEXIÓN CON GOOGLE SHEETS (Apps Script)
 // ══════════════════════════════════════════
 function getApi() { const a=lsGet('mychada_api',null); return a && a.url ? a : null; }
@@ -1023,8 +1277,13 @@ async function fetchConfig() {
   return d;
 }
 function avisoVersion(d) {
-  return (d.version||0) < APP_VERSION
-    ? `\n\n⚠ El script de la planilla es de una versión anterior. Actualizá el Codigo.gs a la v10 y ejecutá "actualizarPlanilla".` : '';
+  return ((d.version||0) < APP_VERSION
+    ? `\n\n⚠ El script de la planilla es de una versión anterior. Actualizá el Codigo.gs a la v11 y ejecutá "actualizarPlanilla".` : '')
+    + avisoIndividuales();
+}
+function avisoIndividuales() {
+  const mal = DB.usuarios.filter(u=>u.rol==='individual' && !empById(u.empleadoId));
+  return mal.length ? `\n\n⚠ Usuarios individuales sin "Empleado ID" válido en la pestaña Usuarios: ${mal.map(u=>u.nombre).join(', ')}.` : '';
 }
 
 // Actualización silenciosa (al abrir la app y al recuperar señal)
@@ -1038,15 +1297,20 @@ async function backgroundSync() {
 }
 
 function updateSyncBar(state, msg) {
-  const d=document.getElementById('sync-dot'), t=document.getElementById('sync-text');
-  if(!d) return;
+  const [cls, txt] = estadoSync(state, msg);
+  [['sync-dot','sync-text'],['sync-dot-ind','sync-text-ind']].forEach(([di,ti])=>{
+    const d=document.getElementById(di), t=document.getElementById(ti);
+    if(d && t) { d.className=cls; t.textContent=txt; }
+  });
+}
+function estadoSync(state, msg) {
   const n=getQueue().length;
-  if(!getApi()) { d.className='sync-dot offline'; t.textContent='Sin planilla configurada — modo prueba'; return; }
-  if(state==='sending') { d.className='sync-dot syncing'; t.textContent='Enviando a Google Sheets…'; return; }
-  if(!navigator.onLine) { d.className='sync-dot offline'; t.textContent = n ? `Sin señal — ${n} envío(s) guardado(s), se mandan solos` : 'Sin señal — guardando en este equipo'; return; }
-  if(state==='error' && n) { d.className='sync-dot offline'; t.textContent=`No se pudo enviar (${msg}) — ${n} pendiente(s), se reintenta`; return; }
-  if(n) { d.className='sync-dot syncing'; t.textContent=`${n} envío(s) pendiente(s)`; return; }
-  d.className='sync-dot'; t.textContent='Sincronizado con Google Sheets ✓';
+  if(!getApi()) return ['sync-dot offline','Sin planilla configurada — modo prueba'];
+  if(state==='sending') return ['sync-dot syncing','Enviando a Google Sheets…'];
+  if(!navigator.onLine) return ['sync-dot offline', n ? `Sin señal — ${n} envío(s) guardado(s), se mandan solos` : 'Sin señal — guardando en este equipo'];
+  if(state==='error' && n) return ['sync-dot offline',`No se pudo enviar (${msg}) — ${n} pendiente(s), se reintenta`];
+  if(n) return ['sync-dot syncing',`${n} envío(s) pendiente(s)`];
+  return ['sync-dot','Sincronizado con Google Sheets ✓'];
 }
 
 // Link de configuración: #cfg=<base64>
@@ -1219,7 +1483,9 @@ readSetupLink();
 initLogin();
 backgroundSync();
 buscarActualizacion();
-document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') buscarActualizacion(); });
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState!=='visible') return;
+  buscarActualizacion();
+  if(currentUser && document.getElementById('screen-ind').classList.contains('active')) renderInd(); });
 setInterval(buscarActualizacion, 30*60000);
 document.querySelectorAll('.app-build').forEach(el=>el.textContent = 'Versión ' + APP_BUILD);
 // quita el ?v= de la dirección después de actualizar
